@@ -70,7 +70,7 @@ class TFSegformerDropPath(tf.keras.layers.Layer):
             shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
             random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
             random_tensor = tf.floor(random_tensor)
-            return (x / keep_prob) * random_tensor
+            return (x / keep_prob) * tf.cast(random_tensor, x.dtype)
         return x
 
 
@@ -244,15 +244,17 @@ class TFSegformerDWConv(tf.keras.layers.Layer):
         )
 
     def call(self, hidden_states: tf.Tensor, height: int, width: int) -> tf.Tensor:
-        batch_size = shape_list(hidden_states)[0]
+#         batch_size = shape_list(hidden_states)[0]
         num_channels = shape_list(hidden_states)[-1]
-        hidden_states = tf.reshape(hidden_states, (batch_size, height, width, num_channels))
+#         hidden_states = tf.reshape(hidden_states, (batch_size, height, width, num_channels))
+        hidden_states = tf.reshape(hidden_states, (-1, height, width, num_channels))
         hidden_states = self.depthwise_convolution(hidden_states)
 
         new_height = shape_list(hidden_states)[1]
         new_width = shape_list(hidden_states)[2]
         num_channels = shape_list(hidden_states)[3]
-        hidden_states = tf.reshape(hidden_states, (batch_size, new_height * new_width, num_channels))
+#         hidden_states = tf.reshape(hidden_states, (batch_size, new_height * new_width, num_channels))
+        hidden_states = tf.reshape(hidden_states, (-1, new_height * new_width, num_channels))
         return hidden_states
 
 
